@@ -46,6 +46,13 @@ public class Game extends ApplicationAdapter {
 		rainMusic.setLooping(true);
 		rainMusic.play();
 
+		//create camera
+		camera = new OrthographicCamera();
+		camera.setToOrtho(false, 800, 480);
+
+		batch = new SpriteBatch();
+
+		//create bucket rectangle
 		bucket = new Rectangle();
 		bucket.x = 800 / 2 - 64 / 2;//centers rectangle horizontally
 		bucket.y = 20;
@@ -121,6 +128,7 @@ public class Game extends ApplicationAdapter {
 	
 	@Override
 	public void dispose () {
+		// dispose of all the native resources
 		dropImage.dispose();
 		bucketImage.dispose();
 		dropSound.dispose();
