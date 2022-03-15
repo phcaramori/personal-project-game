@@ -8,6 +8,7 @@ import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
@@ -15,36 +16,27 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.TimeUtils;
-
 import java.util.Iterator;
 
 
 public class Game extends ApplicationAdapter {
 	private Texture dropImage;
 	private Texture bucketImage;
-	private Sound dropSound;
-	private Music rainMusic;
 	private Rectangle bucket;
 	private OrthographicCamera camera;
 	private SpriteBatch batch;
 	private Input Input;
 	private Array<Rectangle> raindrops; //Gdx class to be used instead of array, better garbage-collection
 	private long lastDropTime; //time in ms, long numbers
+	private int score;
+	private BitmapFont font;
 
 	@Override
-	public void create () {
+	public void create () { //setup
 		/* Screen is 800 by 480px*/
 		// load the images for the droplet and the bucket, 64x64 pixels each
 		dropImage = new Texture(Gdx.files.internal("drop.png"));
 		bucketImage = new Texture(Gdx.files.internal("bucket.png"));
-
-		// load the drop sound effect and the rain background "music"
-		dropSound = Gdx.audio.newSound(Gdx.files.internal("waterdrop.wav"));
-		rainMusic = Gdx.audio.newMusic(Gdx.files.internal("rain.mp3"));
-
-		// start the playback of the background music immediately
-		rainMusic.setLooping(true);
-		rainMusic.play();
 
 		//create camera
 		camera = new OrthographicCamera();
@@ -61,6 +53,10 @@ public class Game extends ApplicationAdapter {
 
 		raindrops = new Array<Rectangle>();
 		spawnRaindrop();
+
+		//font
+		font = new BitmapFont(Gdx.files.internal("SilomFont.fnt"));
+		score = 0;
 	}
 
 	//make rain drops
@@ -81,11 +77,15 @@ public class Game extends ApplicationAdapter {
 
 		//Draw bucket
 		batch.setProjectionMatrix(camera.combined);
+
+
+		//batch
 		batch.begin();
 		batch.draw(bucketImage, bucket.x, bucket.y);
 		for(Rectangle raindrop: raindrops) {
 			batch.draw(dropImage, raindrop.x, raindrop.y);
 		}
+		font.draw(batch, Integer.toString(score), 760, 460);
 		batch.end(); //sends commands all at once. All "draw" must be in-between .begin and .end
 
 
@@ -119,9 +119,9 @@ public class Game extends ApplicationAdapter {
 			Rectangle raindrop = iter.next();
 			raindrop.y -= 200 * Gdx.graphics.getDeltaTime();
 			if (raindrop.y + 64 < 0) iter.remove();
-			if (raindrop.overlaps(bucket)) {
-				dropSound.play();
+			if (raindrop.overlaps(bucket)) { //collision
 				iter.remove();
+				score ++;
 			}
 		}
 	}
@@ -131,8 +131,6 @@ public class Game extends ApplicationAdapter {
 		// dispose of all the native resources
 		dropImage.dispose();
 		bucketImage.dispose();
-		dropSound.dispose();
-		rainMusic.dispose();
 		batch.dispose();
 	}
 }
