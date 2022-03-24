@@ -24,14 +24,20 @@ import java.util.Random;
 public class Game extends ApplicationAdapter {
 	private Texture dropImage;
 	private Texture bucketImage;
-	private Rectangle bucket;
+	private Circle bucket;
 	private OrthographicCamera camera;
 	private SpriteBatch batch;
 	private Input Input;
 	private Array<Rectangle> raindrops; //Gdx class to be used instead of array, better garbage-collection
+	private Array<Ball> balls;
 	private long lastDropTime; //time in ms, long numbers
 	private int score;
+	private int mainValue;
 	private BitmapFont font;
+
+	/*
+	-	não sei se devo usar Circle ou Rectangle com foto de um circulo
+	 */
 
 	@Override
 	public void create () { //setup
@@ -46,113 +52,118 @@ public class Game extends ApplicationAdapter {
 
 		batch = new SpriteBatch();
 
-		//create bucket rectangle
-		bucket = new Rectangle();
+		//create bucket circle
+		bucket = new Circle();
 		bucket.x = 800 / 2 - 64 / 2;//centers rectangle horizontally
 		bucket.y = 20;
-		bucket.width = 64;
-		bucket.height = 64;
+		bucket.radius = 64;
 
 		raindrops = new Array<Rectangle>();
-		spawnRaindrop();
 
 		//font
 		font = new BitmapFont(Gdx.files.internal("SilomFont.fnt"));
 		score = 0;
-	}
+		mainValue = 0;
 
-	//make rain drops
-	private void spawnRaindrop() {
-		Rectangle raindrop = new Rectangle();
-		raindrop.x = MathUtils.random(0, 800-64); //return rand value from 0 to 746
-		raindrop.y = 480; //set y at the top of the screen
-		raindrop.width = 64;
-		raindrop.height = 64;
-		raindrops.add(raindrop); //add to array raindrops
-		lastDropTime = TimeUtils.nanoTime(); //
+
+		balls = new Array<Ball>();
 	}
 
 	private void spawnBall(){
 		//Ball ball = new Ball(1,2);
 		Random rand = new Random();
-		int operatorNum = rand.nextInt(2);
-		int ballValue = rand.nextInt(10);
+		int ballValue;
+		int operatorNum = rand.nextInt(3);
 		switch (operatorNum){
 			case 0:
+				ballValue = rand.nextInt(20);
 				AdditionBall ball1 = new AdditionBall(ballValue);
+				balls.add(ball1);
 				break;
 			case 1:
+				ballValue = rand.nextInt(20);
 				SubtractionBall ball2 = new SubtractionBall(ballValue);
+				balls.add(ball2);
 				break;
 			case 2:
+				ballValue = rand.nextInt(5);
 				MultiplicationBall ball3 = new MultiplicationBall(ballValue);
+				balls.add(ball3);
 				break;
 		}
 		//fill in display
 	}
 
-	/* ideia:
-	Objeto ball criado com certe frequencia; contem todos valores necessarios.
-	Mantem o objeto Circle, usado para display.
 
-	Precisa chegar mais perto possivel a um numero, # de bolas fixo (10)
-
- 	*/
-	
-
+	/*
+	-	Ball has 3 subclasses: Addition, Subtraction, and Multiplication balls;
+	-	The display functions are handled by the superClass
+	-	The operator-specific functions are in each individual subclass
+	 */
 	public class Ball{
-		Circle displayObject;
+		Circle displayObject; //object seen on screen - libGDX circle API
 		int numberValue;
 
 		public Ball(int num){ //constructor
-			//better way to do this - call w/ a string
-			numberValue = num;
+			numberValue = num; //Number value of ball - subclasses handle operations
 			displayObject = new Circle(); //actual object on screen
+			displayObject.x = MathUtils.random(0, 800-64); //return rand value from 0 to 746
+			displayObject.y = 480; //set y at the top of the screen
+			displayObject.radius = 64; //radius/size of circle
+			lastDropTime = TimeUtils.nanoTime();
 		}
 
-		private void display(){
-			System.out.println(2);
-			//show on screen, calls calcDisplayValue
-		}
 
-		void update(){
-			System.out.println(this.numberValue);
-			//move down / update on circle object
+		void collideS(String operator, int val){
+			if(operator == "add"){
+				mainValue += val;
+			}else if(operator == "subtract"){
+				mainValue -= val;
+			}else if(operator == "multiply"){
+				mainValue *= val;
+			}
+			System.out.println(mainValue);
 		}
 	}
 
 	public class AdditionBall extends Ball{
+		int value;
 
 		public AdditionBall(int num) {
 			super(num);
+			value = num;
+			System.out.println("addition ball created");
 		}
 
-		void update(){
-			super.update();
+		void collide(){
+			super.collideS("add", value);
+			System.out.println("ADDING " + value + "TO " + mainValue);
 		}
 
 	}
 
 	public class SubtractionBall extends Ball{
+		int value;
 
 		public SubtractionBall(int num) {
 			super(num);
 		}
 
-		void update(){
-			super.update();
+		void collide(){
+			super.collideS("subtract", value);
 		}
 
 	}
 
 	public class MultiplicationBall extends Ball{
+		int value;
 
 		public MultiplicationBall(int num) {
 			super(num);
 		}
 
-		void update(){
-			super.update();
+		void collide(){
+			super.collideS("multiply", value);
 		}
 
 	}
@@ -169,8 +180,8 @@ public class Game extends ApplicationAdapter {
 		//batch
 		batch.begin();
 		batch.draw(bucketImage, bucket.x, bucket.y);
-		for(Rectangle raindrop: raindrops) {
-			batch.draw(dropImage, raindrop.x, raindrop.y);
+		for(Ball ball: balls) {
+			batch.draw(dropImage, ball.displayObject.x, ball.displayObject.y);
 		}
 		font.draw(batch, Integer.toString(score), 760, 460);
 		batch.end(); //sends commands all at once. All "draw" must be in-between .begin and .end
@@ -199,15 +210,17 @@ public class Game extends ApplicationAdapter {
 		if(bucket.x < 0) bucket.x = 0;
 		if(bucket.x > 800 - 64) bucket.x = 800 - 64;
 
-		//if too much time has passed, it spawns a new raindrop
-		if(TimeUtils.nanoTime() - lastDropTime > 1000000000) spawnRaindrop();
+		//if too much time has passed, it spawns a new ball
+		if(TimeUtils.nanoTime() - lastDropTime > 1000000000) spawnBall();
 
-		for (Iterator<Rectangle> iter = raindrops.iterator(); iter.hasNext(); ) { //iterate through raindrops
-			Rectangle raindrop = iter.next();
-			raindrop.y -= 200 * Gdx.graphics.getDeltaTime();
-			if (raindrop.y + 64 < 0) iter.remove();
-			if (raindrop.overlaps(bucket)) { //collision
+		for (Iterator<Ball> iter = balls.iterator(); iter.hasNext(); ) { //iterate through raindrops
+			Ball ball = iter.next();
+			ball.displayObject.y -= 200 * Gdx.graphics.getDeltaTime();
+			if (ball.displayObject.y + 64 < 0) iter.remove();
+			if (ball.displayObject.overlaps(bucket)) { //collision
 				iter.remove();
+				System.out.println(balls);
+				iter.next().collide(); // :(
 				score ++;
 			}
 		}
