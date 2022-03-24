@@ -12,11 +12,13 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.TimeUtils;
 import java.util.Iterator;
+import java.util.Random;
 
 
 public class Game extends ApplicationAdapter {
@@ -68,6 +70,91 @@ public class Game extends ApplicationAdapter {
 		raindrop.height = 64;
 		raindrops.add(raindrop); //add to array raindrops
 		lastDropTime = TimeUtils.nanoTime(); //
+	}
+
+	private void spawnBall(){
+		//Ball ball = new Ball(1,2);
+		Random rand = new Random();
+		int operatorNum = rand.nextInt(2);
+		int ballValue = rand.nextInt(10);
+		switch (operatorNum){
+			case 0:
+				AdditionBall ball1 = new AdditionBall(ballValue);
+				break;
+			case 1:
+				SubtractionBall ball2 = new SubtractionBall(ballValue);
+				break;
+			case 2:
+				MultiplicationBall ball3 = new MultiplicationBall(ballValue);
+				break;
+		}
+		//fill in display
+	}
+
+	/* ideia:
+	Objeto ball criado com certe frequencia; contem todos valores necessarios.
+	Mantem o objeto Circle, usado para display.
+
+	Precisa chegar mais perto possivel a um numero, # de bolas fixo (10)
+
+ 	*/
+	
+
+	public class Ball{
+		Circle displayObject;
+		int numberValue;
+
+		public Ball(int num){ //constructor
+			//better way to do this - call w/ a string
+			numberValue = num;
+			displayObject = new Circle(); //actual object on screen
+		}
+
+		private void display(){
+			System.out.println(2);
+			//show on screen, calls calcDisplayValue
+		}
+
+		void update(){
+			System.out.println(this.numberValue);
+			//move down / update on circle object
+		}
+	}
+
+	public class AdditionBall extends Ball{
+
+		public AdditionBall(int num) {
+			super(num);
+		}
+
+		void update(){
+			super.update();
+		}
+
+	}
+
+	public class SubtractionBall extends Ball{
+
+		public SubtractionBall(int num) {
+			super(num);
+		}
+
+		void update(){
+			super.update();
+		}
+
+	}
+
+	public class MultiplicationBall extends Ball{
+
+		public MultiplicationBall(int num) {
+			super(num);
+		}
+
+		void update(){
+			super.update();
+		}
+
 	}
 
 	@Override
