@@ -28,9 +28,11 @@ public class Game extends ApplicationAdapter {
 	private OrthographicCamera camera;
 	private SpriteBatch batch;
 	private Input Input;
-	private Array<Rectangle> raindrops; //Gdx class to be used instead of array, better garbage-collection
-	private Array<Ball> balls;
+ 	private Array<Ball> balls;
 	private long lastDropTime; //time in ms, long numbers
+	int width = 480;
+	int height = 800;
+
 	private int score;
 	private int mainValue;
 	private BitmapFont font;
@@ -47,8 +49,10 @@ public class Game extends ApplicationAdapter {
 		bucketImage = new Texture(Gdx.files.internal("bucket.png"));
 
 		//create camera
-		camera = new OrthographicCamera();
-		camera.setToOrtho(false, 800, 480);
+		float screenWidth = Gdx.graphics.getWidth();
+		float screenHeight = Gdx.graphics.getHeight();
+		camera = new OrthographicCamera(width, height * (screenHeight / screenWidth));
+		camera.setToOrtho(false, width, height * (screenHeight / screenWidth));
 
 		batch = new SpriteBatch();
 
@@ -58,7 +62,6 @@ public class Game extends ApplicationAdapter {
 		bucket.y = 20;
 		bucket.radius = 64;
 
-		raindrops = new Array<Rectangle>();
 
 		//font
 		font = new BitmapFont(Gdx.files.internal("SilomFont.fnt"));
@@ -96,9 +99,12 @@ public class Game extends ApplicationAdapter {
 
 
 	/*
-	-	Ball has 3 subclasses: Addition, Subtraction, and Multiplication balls;
+	-	Ball has 3 subclasses: AdditionBall, Ball, and MultiplicationBall
 	-	The display functions are handled by the superClass
+	-	Collision is inherited from the superClass
+	-	Each subclass' constructor is derived from the super, using the super() method
 	-	The operator-specific functions are in each individual subclass
+	-	Each subclass inherits all of the super class's methods
 	 */
 	public class Ball{
 		Circle displayObject; //object seen on screen - libGDX circle API
@@ -113,8 +119,7 @@ public class Game extends ApplicationAdapter {
 			lastDropTime = TimeUtils.nanoTime();
 		}
 
-
-		void collideS(String operator, int val){
+		void collideS(String operator, int val){ //Called on collision
 			if(operator == "add"){
 				mainValue += val;
 			}else if(operator == "subtract"){
@@ -183,7 +188,7 @@ public class Game extends ApplicationAdapter {
 		for(Ball ball: balls) {
 			batch.draw(dropImage, ball.displayObject.x, ball.displayObject.y);
 		}
-		font.draw(batch, Integer.toString(score), 760, 460);
+		font.draw(batch, Integer.toString(score), Gdx.graphics.getWidth()-30, Gdx.graphics.getHeight()*2-30);
 		batch.end(); //sends commands all at once. All "draw" must be in-between .begin and .end
 
 
@@ -208,10 +213,10 @@ public class Game extends ApplicationAdapter {
 		if(Gdx.input.isKeyPressed(Keys.RIGHT)) bucket.x += 200 * Gdx.graphics.getDeltaTime();
 		//getDeltaTime returns time since last frame in seconds
 		if(bucket.x < 0) bucket.x = 0;
-		if(bucket.x > 800 - 64) bucket.x = 800 - 64;
+		if(bucket.x > Gdx.graphics.getWidth() - 64) bucket.x = Gdx.graphics.getWidth() - 64;
 
-		//if too much time has passed, it spawns a new ball
-		if(TimeUtils.nanoTime() - lastDropTime > 1000000000) spawnBall();
+		//if too much time has passed, it spawns a new raindrop
+		if(TimeUtils.nanoTime() - lastDropTime > 2000000000) spawnBall();
 
 		for (Iterator<Ball> iter = balls.iterator(); iter.hasNext(); ) { //iterate through raindrops
 			Ball ball = iter.next();
@@ -220,12 +225,11 @@ public class Game extends ApplicationAdapter {
 			if (ball.displayObject.overlaps(bucket)) { //collision
 				iter.remove();
 				System.out.println(balls);
-				iter.next().collide(); // :(
 				score ++;
 			}
 		}
 	}
-	
+
 	@Override
 	public void dispose () {
 		// dispose of all the native resources
