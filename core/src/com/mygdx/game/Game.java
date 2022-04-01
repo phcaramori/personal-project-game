@@ -23,7 +23,14 @@ import java.awt.*;
 import java.util.Iterator;
 import java.util.Random;
 
-
+/**
+ * TO-DO:
+ * add text in circles
+ * add text at top of screen saying goal number (100)
+ * add text saying number of balls remaining
+ * add logic to ball maker to only drop if ball remaining !<=0
+ * add logic to see how close ball was from 100 - make score the distance
+ */
 public class Game extends ApplicationAdapter {
 	private Texture dropImage;
 	private Texture bucketImage;
